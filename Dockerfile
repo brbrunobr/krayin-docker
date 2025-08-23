@@ -17,8 +17,9 @@ RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     libonig-dev \
     libxml2-dev \
+    libicu-dev \
     calendar \
-    && docker-php-ext-install pdo_mysql zip gd mbstring exif pcntl bcmath opcache
+    && docker-php-ext-install pdo_mysql zip gd mbstring exif pcntl bcmath opcache intl
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

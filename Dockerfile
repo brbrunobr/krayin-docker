@@ -42,6 +42,11 @@ WORKDIR /var/www/html
 
 RUN git clone https://github.com/brbrunobr/laravel-crm.git .
 
+# --- INÍCIO DA CORREÇÃO DE PROXY ---
+# Força o Laravel a confiar nos cabeçalhos do proxy reverso do Coolify (resolve problemas de HTTPS/Mixed Content)
+RUN sed -i "s/protected \$proxies;/protected \$proxies = '*';/" app/Http/Middleware/TrustProxies.php
+# --- FIM DA CORREÇÃO DE PROXY ---
+
 # --- PERSONALIZADO - BRUNO ---
 # Adicione esta linha para instalar a extensão 'calendar'
 RUN docker-php-ext-install calendar

@@ -21,15 +21,15 @@ services:
     environment:
       MYSQL_ROOT_HOST: "%"
       MYSQL_ROOT_PASSWORD: root
-    ports:
-      - 3306:3306
+    # ports:
+    #   - 3306:3306
     volumes:
       - ./.configs/mysql-data:/var/lib/mysql/
 
   krayin-redis:
     image: redis:6.2-alpine
-    ports:
-      - 6379:6379
+    # ports:
+    #   - 6379:6379
     command: redis-server --save 20 1 --loglevel warning
     volumes:
       - ./.configs/redis-data:/data
@@ -41,15 +41,15 @@ services:
       PMA_USER: root
       PMA_PASSWORD: root
       UPLOAD_LIMIT: 512M
-    ports:
-      - 8080:80
+    # ports:
+    #   - 8080:80
 
   krayin-mailhog:
     image: mailhog/mailhog
     logging:
       # Disable saving logs.
       driver: "none"
-    ports:
-      # SMTP server.
-      - 1025:1025
-      - 8025:8025
+    # ports:
+    #   # SMTP server.
+    #   - 1025:1025
+    #   - 8025:8025

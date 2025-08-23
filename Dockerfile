@@ -36,9 +36,13 @@ WORKDIR /var/www/html
 # Clonar o repositório do Krayin CRM
 # RUN git clone https://github.com/krayin/crm.git .
 # RUN git -c http.sslVerify=false clone --depth 1 https://github.com/krayin/crm.git .
-RUN GIT_TERMINAL_PROMPT=0 git clone --depth 1 https://github.com/krayin/crm.git .
+# RUN GIT_TERMINAL_PROMPT=0 git clone --depth 1 https://github.com/krayin/crm.git .
 
-# RUN git clone https://github.com/brbrunobr/laravel-crm.git .
+RUN git clone https://github.com/brbrunobr/laravel-crm.git .
+
+# --- PERSONALIZADO - BRUNO ---
+# Adicione esta linha para instalar a extensão 'calendar'
+RUN docker-php-ext-install calendar
 
 # Instalar dependências do Composer
 # A flag --no-dev é boa prática para produção

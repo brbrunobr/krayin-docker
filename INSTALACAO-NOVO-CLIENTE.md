@@ -80,6 +80,10 @@ php artisan migrate --force
 # 3. Crie o arquivo que impede o redirecionamento para /install
 touch storage/installed
 
+# 4. O COMANDO MÁGICO: Cria o elo simbólico.
+# Ele conectará 'public/storage' -> 'storage/app/public'
+php artisan storage:link
+
 echo "Instalação finalizada! O CRM está pronto."
 ```
 

@@ -10,8 +10,8 @@ services:
       context: .
       dockerfile: ./Dockerfile
     image: krayin-php-apache
-    ports:
-      - 80:80
+    # ports:
+    # - 80:80
     volumes:
       - ./workspace/:/var/www/html/
 
@@ -45,11 +45,11 @@ services:
       - 8080:80
 
   krayin-mailhog:
-      image: mailhog/mailhog
-      logging:
-          # Disable saving logs.
-          driver: 'none'
-      ports:
-          # SMTP server.
-          - 1025:1025
-          - 8025:8025
+    image: mailhog/mailhog
+    logging:
+      # Disable saving logs.
+      driver: "none"
+    ports:
+      # SMTP server.
+      - 1025:1025
+      - 8025:8025

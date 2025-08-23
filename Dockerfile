@@ -1,5 +1,6 @@
 # Use a imagem base do PHP com Apache
-FROM php:8.1-apache
+# FROM php:8.1-apache
+FROM php:8.2-apache
 
 # Argumentos para o build
 ARG uid

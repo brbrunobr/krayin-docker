@@ -12,8 +12,8 @@ services:
     image: krayin-php-apache
     # ports:
     # - 80:80
-    volumes:
-      - ./workspace/:/var/www/html/
+    # volumes:
+    #   - ./workspace/:/var/www/html/
 
   krayin-mysql:
     image: mysql:8.0

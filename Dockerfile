@@ -63,6 +63,15 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 
 # --- FIM DAS MODIFICAÇÕES IMPORTANTES ---
 
+# Copia o nosso novo script de inicialização para dentro do contêiner
+COPY entrypoint.sh /usr/local/bin/
+
+# Torna o script executável
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Define o nosso script como o ponto de entrada do contêiner
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
 # Expor a porta interna (o Coolify vai mapear isso )
 EXPOSE 80
 

@@ -22,16 +22,21 @@ php artisan optimize:clear
 echo "Verificando migrações do banco de dados..."
 php artisan migrate --force
 
-# 4. Garante que o elo simbólico para os arquivos de upload exista.
+# 4. O COMANDO ESSENCIAL: Popula o banco com os dados iniciais (funções, etc.)
+echo "Populando banco de dados com os dados iniciais..."
+php artisan db:seed --force
+echo "Banco de dados populado com os dados iniciais!"
+
+# 5. Garante que o elo simbólico para os arquivos de upload exista.
 echo "Criando o elo simbólico do storage..."
 php artisan storage:link
 
-# 5. Garante que o arquivo 'installed' exista para evitar o redirecionamento.
+# 6. Garante que o arquivo 'installed' exista para evitar o redirecionamento.
 echo "Criando o arquivo 'installed'..."
 touch storage/installed
 
 echo "--- Script de inicialização concluído. Iniciando o Apache. ---"
 
-# 6. Executa o comando padrão do contêiner para iniciar o servidor web.
+# 7. Executa o comando padrão do contêiner para iniciar o servidor web.
 # Esta linha é MUITO importante e deve ser a última.
 exec apache2-foreground

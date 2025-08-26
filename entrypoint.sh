@@ -35,6 +35,13 @@ php artisan storage:link
 echo "Criando o arquivo 'installed'..."
 touch storage/installed
 
+# 6.1. Gera a APP_KEY se ainda não existir
+if ! grep -q "^APP_KEY=" .env || grep -q "^APP_KEY=$" .env; then
+    echo "Gerando APP_KEY..."
+    php artisan key:generate --force
+    echo "APP_KEY gerada com sucesso = $(grep ^APP_KEY= .env | cut -d= -f2)"
+fi
+
 echo "--- Script de inicialização concluído. Iniciando o Apache. ---"
 
 # 7. Executa o comando padrão do contêiner para iniciar o servidor web.

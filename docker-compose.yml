@@ -10,6 +10,8 @@ services:
       context: .
       dockerfile: ./Dockerfile
     image: krayin-php-apache
+    volumes:
+      - krayin-storage:/var/www/html/storage
     # ports:
     # - 80:80
     # volumes:

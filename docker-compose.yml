@@ -11,6 +11,32 @@ services:
       context: .
       dockerfile: ./Dockerfile
     image: krayin-php-apache
+    environment:
+      - SERVICE_FQDN_KRAYIN_PHP_APACHE=${SERVICE_FQDN_KRAYIN_PHP_APACHE}
+      - SERVICE_URL_KRAYIN_PHP_APACHE=${SERVICE_URL_KRAYIN_PHP_APACHE}
+      - APP_CURRENCY=${APP_CURRENCY}
+      - APP_DEBUG=${APP_DEBUG}
+      - APP_ENV=${APP_ENV}
+      - APP_KEY=${APP_KEY}
+      - APP_NAME=${APP_NAME}
+      - APP_URL=${APP_URL}
+      - DB_CONNECTION=${DB_CONNECTION}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_HOST=${DB_HOST}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - DB_USERNAME=${DB_USERNAME}
+      - USER=${USER}
+      - MAIL_DOMAIN=${MAIL_DOMAIN}
+      - MAIL_ENCRYPTION=${MAIL_ENCRYPTION}
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME}
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_MAILER=${MAIL_MAILER}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_RECEIVER_DRIVER=${MAIL_RECEIVER_DRIVER}
     volumes:
       - krayin-storage:/var/www/html/storage
     # Adicione esta seção 'depends_on'

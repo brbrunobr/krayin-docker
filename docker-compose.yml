@@ -1,4 +1,5 @@
-version: "3.1"
+# Atualize a versão para suportar a condição 'service_healthy'
+version: "3.9"
 
 services:
   krayin-php-apache:
@@ -12,10 +13,11 @@ services:
     image: krayin-php-apache
     volumes:
       - krayin-storage:/var/www/html/storage
-    # ports:
-    # - 80:80
-    # volumes:
-    #   - ./workspace/:/var/www/html/
+    # Adicione esta seção 'depends_on'
+    depends_on:
+      krayin-mysql:
+        # A condição que faz o serviço esperar
+        condition: service_healthy
 
   krayin-mysql:
     image: mysql:8.0
@@ -23,15 +25,30 @@ services:
     environment:
       MYSQL_ROOT_HOST: "%"
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-    # ports:
-    #   - 3306:3306
+      # É uma boa prática definir o banco de dados aqui também
+      MYSQL_DATABASE: krayin # Substitua 'krayin' pelo nome do seu banco de dados, se for diferente
     volumes:
       - ./.configs/mysql-data:/var/lib/mysql/
+    # Adicione esta seção 'healthcheck'
+    healthcheck:
+      # O comando que o Docker executará para verificar a saúde do MySQL
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${DB_PASSWORD}",
+        ]
+      interval: 10s # Intervalo entre as verificações
+      timeout: 5s # Tempo máximo para a verificação responder
+      retries: 10 # Número de tentativas antes de marcar como 'unhealthy'
 
   krayin-redis:
     image: redis:6.2-alpine
-    # ports:
-    #   - 6379:6379
     command: redis-server --save 20 1 --loglevel warning
     volumes:
       - ./.configs/redis-data:/data
@@ -43,15 +60,16 @@ services:
       PMA_USER: root
       PMA_PASSWORD: ${DB_PASSWORD}
       UPLOAD_LIMIT: 512M
-    # ports:
-    #   - 8080:80
+    # Também é uma boa prática fazer o phpMyAdmin esperar pelo banco de dados
+    depends_on:
+      krayin-mysql:
+        condition: service_healthy
 
   krayin-mailhog:
     image: mailhog/mailhog
     logging:
-      # Disable saving logs.
       driver: "none"
-    # ports:
-    #   # SMTP server.
-    #   - 1025:1025
-    #   - 8025:8025
+
+# Adicione esta seção no final para definir o volume nomeado
+volumes:
+  krayin-storage:

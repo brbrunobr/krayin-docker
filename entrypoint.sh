@@ -23,9 +23,20 @@ echo "Verificando migrações do banco de dados..."
 php artisan migrate --force
 
 # 4. O COMANDO ESSENCIAL: Popula o banco com os dados iniciais (funções, etc.)
-echo "Populando banco de dados com os dados iniciais..."
-php artisan db:seed --force
-echo "Banco de dados populado com os dados iniciais!"
+# DEPOIS (solução):
+echo "Verificando se o banco precisa ser populado..."
+LEAD_COUNT=$(php artisan tinker --execute="echo \Webkul\Lead\Models\Lead::count();")
+PIPELINE_COUNT=$(php artisan tinker --execute="echo \Webkul\Lead\Models\Pipeline::count();")
+
+if [ "$LEAD_COUNT" -eq "0" ] && [ "$PIPELINE_COUNT" -eq "0" ]; then
+    echo "Banco vazio detectado. Populando com dados iniciais..."
+    php artisan db:seed --force
+    echo "Banco de dados populado com os dados iniciais!"
+else
+    echo "Dados existentes detectados. Pulando seeders para preservar dados personalizados."
+    echo "Leads encontrados: $LEAD_COUNT"
+    echo "Pipelines encontrados: $PIPELINE_COUNT"
+fi
 
 # 5. Garante que o elo simbólico para os arquivos de upload exista.
 echo "Criando o elo simbólico do storage..."

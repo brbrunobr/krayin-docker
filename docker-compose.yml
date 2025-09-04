@@ -18,6 +18,8 @@ services:
       krayin-mysql:
         # A condição que faz o serviço esperar
         condition: service_healthy
+    networks:
+      - krayin-network
 
   krayin-mysql:
     image: mysql:8.0
@@ -47,12 +49,16 @@ services:
       interval: 10s # Intervalo entre as verificações
       timeout: 5s # Tempo máximo para a verificação responder
       retries: 10 # Número de tentativas antes de marcar como 'unhealthy'
+    networks:
+      - krayin-network
 
   krayin-redis:
     image: redis:6.2-alpine
     command: redis-server --save 20 1 --loglevel warning
     volumes:
       - ./.configs/redis-data:/data
+    networks:
+      - krayin-network
 
   krayin-phpmyadmin:
     image: phpmyadmin:latest
@@ -65,12 +71,22 @@ services:
     depends_on:
       krayin-mysql:
         condition: service_healthy
+    networks:
+      - krayin-network
 
   krayin-mailhog:
     image: mailhog/mailhog
     logging:
       driver: "none"
+    networks:
+      - krayin-network
 
 # Adicione esta seção no final para definir o volume nomeado
 volumes:
   krayin-storage:
+
+# Seção para definir as redes
+networks:
+  krayin-network:
+    driver: bridge
+    name: krayin-network-${REDE_INTERNA}

@@ -1,4 +1,5 @@
 # Use a imagem base do PHP com Apache
+# FROM php:8.1-apache
 FROM php:8.2-apache
 
 # Argumentos para o build
@@ -6,7 +7,7 @@ ARG uid
 ARG user
 ARG container_project_path=/var/www/html
 
-# Instalar dependências do sistema necessárias para as extensões PHP
+# Instalar dependências do sistema necessárias para o Krayin e Composer
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -18,12 +19,10 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libicu-dev \
     libc-client-dev \
-    krb5-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Configurar e instalar as extensões PHP necessárias
-RUN docker-php-ext-configure imap --with-kerberos --with-imap-ssl
-RUN docker-php-ext-install pdo_mysql zip gd mbstring exif pcntl bcmath opcache intl calendar imap
+    libkrb5-dev \
+    calendar \
+    && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
+    && docker-php-ext-install pdo_mysql zip gd mbstring exif pcntl bcmath opcache intl imap
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -40,12 +39,20 @@ WORKDIR /var/www/html
 # --- INÍCIO DAS MODIFICAÇÕES IMPORTANTES ---
 
 # Clonar o repositório do Krayin CRM
+# RUN git clone https://github.com/krayin/crm.git .
+# RUN git -c http.sslVerify=false clone --depth 1 https://github.com/krayin/crm.git .
+# RUN GIT_TERMINAL_PROMPT=0 git clone --depth 1 https://github.com/krayin/crm.git .
+
 RUN git clone https://github.com/brbrunobr/laravel-crm.git .
 
 # --- INÍCIO DA CORREÇÃO DE PROXY ---
-# Força o Laravel a confiar nos cabeçalhos do proxy reverso do Coolify (resolve problemas de HTTPS/Mixed Content )
+# Força o Laravel a confiar nos cabeçalhos do proxy reverso do Coolify (resolve problemas de HTTPS/Mixed Content)
 RUN sed -i "s/protected \$proxies;/protected \$proxies = '*';/" app/Http/Middleware/TrustProxies.php
 # --- FIM DA CORREÇÃO DE PROXY ---
+
+# --- PERSONALIZADO - BRUNO ---
+# Adicione esta linha para instalar a extensão 'calendar'
+RUN docker-php-ext-install calendar
 
 # Instalar dependências do Composer
 # A flag --no-dev é boa prática para produção
@@ -68,7 +75,7 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 # Define o nosso script como o ponto de entrada do contêiner
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
-# Expor a porta interna (o Coolify vai mapear isso)
+# Expor a porta interna (o Coolify vai mapear isso )
 EXPOSE 80
 
 # O comando de inicialização já é gerenciado pela imagem base do Apache

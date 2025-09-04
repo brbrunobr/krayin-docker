@@ -20,9 +20,8 @@ RUN apt-get update && apt-get install -y \
     libicu-dev \
     libc-client-dev \
     libkrb5-dev \
-    calendar \
     && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
-    && docker-php-ext-install pdo_mysql zip gd mbstring exif pcntl bcmath opcache intl imap
+    && docker-php-ext-install pdo_mysql zip gd mbstring exif pcntl bcmath opcache intl imap calendar
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -51,8 +50,6 @@ RUN sed -i "s/protected \$proxies;/protected \$proxies = '*';/" app/Http/Middlew
 # --- FIM DA CORREÇÃO DE PROXY ---
 
 # --- PERSONALIZADO - BRUNO ---
-# Adicione esta linha para instalar a extensão 'calendar'
-RUN docker-php-ext-install calendar
 
 # Instalar dependências do Composer
 # A flag --no-dev é boa prática para produção

@@ -7,8 +7,17 @@ ARG uid
 ARG user
 ARG container_project_path=/var/www/html
 
+# Configurar APT para melhor resiliência
+RUN echo 'Acquire::http::Timeout "300";' > /etc/apt/apt.conf.d/99timeout && \
+    echo 'Acquire::https::Timeout "300";' >> /etc/apt/apt.conf.d/99timeout && \
+    echo 'Acquire::ftp::Timeout "300";' >> /etc/apt/apt.conf.d/99timeout && \
+    echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/99retries
+
+# Atualizar lista de pacotes com retry
+RUN apt-get update || (sleep 5 && apt-get update) || (sleep 10 && apt-get update)
+
 # Instalar dependências do sistema necessárias para o Krayin e Composer
-RUN apt-get update && apt-get install -y \
+RUN apt-get install -y \
     git \
     unzip \
     libzip-dev \

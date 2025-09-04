@@ -6,7 +6,7 @@ ARG uid
 ARG user
 ARG container_project_path=/var/www/html
 
-# Instalar dependências do sistema necessárias para o Krayin e Composer
+# Instalar dependências do sistema necessárias para as extensões PHP
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -17,16 +17,13 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     libicu-dev \
-    calendar \
     libc-client-dev \
-    # <--- ADICIONADO
     krb5-dev \
-    # <--- ADICIONADO
     && rm -rf /var/lib/apt/lists/*
 
-# Configurar e instalar extensões PHP, incluindo imap
-RUN docker-php-ext-configure imap --with-kerberos --with-imap-ssl # <--- ADICIONADO
-RUN docker-php-ext-install pdo_mysql zip gd mbstring exif pcntl bcmath opcache intl imap # <--- ADICIONADO 'imap'
+# Configurar e instalar as extensões PHP necessárias
+RUN docker-php-ext-configure imap --with-kerberos --with-imap-ssl
+RUN docker-php-ext-install pdo_mysql zip gd mbstring exif pcntl bcmath opcache intl calendar imap
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -50,10 +47,6 @@ RUN git clone https://github.com/brbrunobr/laravel-crm.git .
 RUN sed -i "s/protected \$proxies;/protected \$proxies = '*';/" app/Http/Middleware/TrustProxies.php
 # --- FIM DA CORREÇÃO DE PROXY ---
 
-# --- PERSONALIZADO - BRUNO ---
-# A extensão 'calendar' já foi movida para o bloco principal de instalação, esta linha pode ser removida para limpeza.
-# RUN docker-php-ext-install calendar
-
 # Instalar dependências do Composer
 # A flag --no-dev é boa prática para produção
 RUN composer install --no-interaction --optimize-autoloader --no-dev
@@ -75,7 +68,7 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 # Define o nosso script como o ponto de entrada do contêiner
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
-# Expor a porta interna (o Coolify vai mapear isso )
+# Expor a porta interna (o Coolify vai mapear isso)
 EXPOSE 80
 
 # O comando de inicialização já é gerenciado pela imagem base do Apache

@@ -7,17 +7,8 @@ ARG uid
 ARG user
 ARG container_project_path=/var/www/html
 
-# Configurar APT para melhor resiliência
-RUN echo 'Acquire::http::Timeout "300";' > /etc/apt/apt.conf.d/99timeout && \
-    echo 'Acquire::https::Timeout "300";' >> /etc/apt/apt.conf.d/99timeout && \
-    echo 'Acquire::ftp::Timeout "300";' >> /etc/apt/apt.conf.d/99timeout && \
-    echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/99retries
-
-# Atualizar lista de pacotes com retry
-RUN apt-get update || (sleep 5 && apt-get update) || (sleep 10 && apt-get update)
-
 # Instalar dependências do sistema necessárias para o Krayin e Composer
-RUN apt-get install -y \
+RUN apt-get update && apt-get install -y \
     git \
     unzip \
     libzip-dev \
@@ -27,16 +18,8 @@ RUN apt-get install -y \
     libonig-dev \
     libxml2-dev \
     libicu-dev \
-    libc-client-dev \
-    libkrb5-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Configurar e instalar extensão IMAP separadamente
-RUN docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
-    && docker-php-ext-install imap
-
-# Instalar outras extensões PHP
-RUN docker-php-ext-install pdo_mysql zip gd mbstring exif pcntl bcmath opcache intl calendar
+    calendar \
+    && docker-php-ext-install pdo_mysql zip gd mbstring exif pcntl bcmath opcache intl
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -65,6 +48,8 @@ RUN sed -i "s/protected \$proxies;/protected \$proxies = '*';/" app/Http/Middlew
 # --- FIM DA CORREÇÃO DE PROXY ---
 
 # --- PERSONALIZADO - BRUNO ---
+# Adicione esta linha para instalar a extensão 'calendar'
+RUN docker-php-ext-install calendar
 
 # Instalar dependências do Composer
 # A flag --no-dev é boa prática para produção

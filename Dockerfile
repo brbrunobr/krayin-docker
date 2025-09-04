@@ -20,8 +20,14 @@ RUN apt-get update && apt-get install -y \
     libicu-dev \
     libc-client-dev \
     libkrb5-dev \
-    && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
-    && docker-php-ext-install pdo_mysql zip gd mbstring exif pcntl bcmath opcache intl imap calendar
+    && rm -rf /var/lib/apt/lists/*
+
+# Configurar e instalar extensão IMAP separadamente
+RUN docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
+    && docker-php-ext-install imap
+
+# Instalar outras extensões PHP
+RUN docker-php-ext-install pdo_mysql zip gd mbstring exif pcntl bcmath opcache intl calendar
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

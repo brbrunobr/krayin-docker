@@ -25,8 +25,9 @@ services:
     environment:
       MYSQL_ROOT_HOST: "%"
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      # É uma boa prática definir o banco de dados aqui também
-      MYSQL_DATABASE: krayin # Substitua 'krayin' pelo nome do seu banco de dados, se for diferente
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - ./.configs/mysql-data:/var/lib/mysql/
     # Adicione esta seção 'healthcheck'
@@ -40,7 +41,7 @@ services:
           "-h",
           "localhost",
           "-u",
-          "root",
+          "${DB_USERNAME}",
           "-p${DB_PASSWORD}",
         ]
       interval: 10s # Intervalo entre as verificações
@@ -57,7 +58,7 @@ services:
     image: phpmyadmin:latest
     environment:
       PMA_HOST: krayin-mysql
-      PMA_USER: root
+      PMA_USER: ${DB_USERNAME}
       PMA_PASSWORD: ${DB_PASSWORD}
       UPLOAD_LIMIT: 512M
     # Também é uma boa prática fazer o phpMyAdmin esperar pelo banco de dados

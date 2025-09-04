@@ -10,7 +10,7 @@ Este manual permite criar uma nova instância do Krayin CRM para um novo cliente
 
 ## Parte 1: Configuração do Domínio (2 minutos)
 
-Antes de começar, certifique-se de que o DNS do domínio do novo cliente (ex: `crm.novocliente.com`) está apontando para o IP do seu servidor Coolify.
+Antes de começar, certifique-se de que o DNS do domínio do novo cliente (ex: `crm.sorrisos.deltaai.solutions`) está apontando para o IP do seu servidor Coolify.
 
 ## Parte 2: Criação do Projeto no Coolify (5 minutos)
 
@@ -28,32 +28,51 @@ Antes de começar, certifique-se de que o DNS do domínio do novo cliente (ex: `
 #### Configuração do Domínio
 
 - Na aba **"General"**, na seção **"Domains"**
-- Insira o domínio do seu novo cliente (ex: `https://crm.novocliente.com`) no campo do serviço `krayin-php-apache`
+- Insira o domínio do seu novo cliente (ex: `https://crm.sorrisos.com`) no campo do serviço `krayin-php-apache`
 
 #### Variáveis de Ambiente
 
 Vá para a aba **"Environment Variables"** e adicione as seguintes variáveis:
 
-| Chave (Name)            | Valor (Value)                                         |
+**Exemplo para cliente "SORRISOS":**
+
+| Chave (Name)            | Valor (Value) - EXEMPLO                               |
 | ----------------------- | ----------------------------------------------------- |
-| `APP_NAME`              | `CRM Novo Cliente`                                    |
+| `USER`                  | `user_crm_sorrisos`                                   |
+| `APP_NAME`              | `SORRISOS`                                            |
 | `APP_ENV`               | `production`                                          |
 | `APP_DEBUG`             | `false`                                               |
-| `APP_URL`               | `https://crm.novocliente.com`                         |
-| `APP_KEY`               | `base64:IZgK8L4yQ5g5g2bY7h3eR9k7lPqE4sWvF1uT0xZ3aBc=` |
+| `APP_URL`               | `https://crm.sorrisos.deltaai.solutions`              |
+| `APP_KEY`               | `base64:FXySGW8l8R9UCfDvA1DDJcLoBTzeJSClZLypULBsaB8=` |
+| `APP_CURRENCY`          | `BRL`                                                 |
 | `DB_CONNECTION`         | `mysql`                                               |
 | `DB_HOST`               | `krayin-mysql`                                        |
 | `DB_PORT`               | `3306`                                                |
-| `DB_DATABASE`           | `krayin`                                              |
-| `DB_USERNAME`           | `root`                                                |
-| `DB_PASSWORD`           | `senha-super-segura-trocar-depois`                    |
+| `DB_DATABASE`           | `crm_sorrisos`                                        |
+| `DB_USERNAME`           | `krayin_user`                                         |
+| `DB_PASSWORD`           | `86ZNqzknm2te`                                        |
 | `SESSION_SECURE_COOKIE` | `true`                                                |
+
+### 📋 Como Adaptar para Outros Clientes
+
+Para cada novo cliente, personalize as seguintes variáveis:
+
+| Variável      | Exemplo Cliente "ABC"               | Exemplo Cliente "XYZ"               |
+| ------------- | ----------------------------------- | ----------------------------------- |
+| `USER`        | `user_crm_abc`                      | `user_crm_xyz`                      |
+| `APP_NAME`    | `ABC EMPRESA`                       | `XYZ CONSULTORIA`                   |
+| `APP_URL`     | `https://crm.abc.deltaai.solutions` | `https://crm.xyz.deltaai.solutions` |
+| `DB_DATABASE` | `crm_abc`                           | `crm_xyz`                           |
+| `DB_USERNAME` | `abc_user`                          | `xyz_user`                          |
+| `DB_PASSWORD` | `senha_unica_abc123`                | `senha_unica_xyz456`                |
 
 > **⚠️ IMPORTANTE:**
 >
 > - O `DB_PASSWORD` deve ser único para cada cliente por segurança
 > - A `APP_KEY` pode ser reutilizada ou você pode gerar uma nova
-> - Altere `APP_NAME` e `APP_URL` para os valores específicos do cliente
+> - Altere `USER`, `APP_NAME`, `APP_URL`, `DB_DATABASE`, `DB_USERNAME` e `DB_PASSWORD` para os valores específicos do cliente
+> - `APP_CURRENCY` define a moeda padrão (BRL para Real brasileiro)
+> - **ATUALIZAÇÃO:** O docker-compose.yml agora usa variáveis de ambiente, permitindo total personalização por cliente
 
 7. Clique em **"Save"**
 
@@ -89,7 +108,7 @@ echo "Instalação finalizada! O CRM está pronto."
 
 ## Credenciais de Acesso Padrão
 
-- **URL de Login:** `https://crm.novocliente.com/admin/login`
+- **URL de Login:** `https://crm.sorrisos.com/admin/login`
 - **Usuário:** `admin@example.com`
 - **Senha:** `admin123`
 
@@ -104,10 +123,16 @@ echo "Instalação finalizada! O CRM está pronto."
 
 ### O que é Específico por Cliente?
 
+- 🔄 **Usuário do sistema** (USER)
 - 🔄 **Domínio** (APP_URL)
 - 🔄 **Nome da aplicação** (APP_NAME)
+- 🔄 **Nome do banco de dados** (DB_DATABASE)
+- 🔄 **Usuário do banco de dados** (DB_USERNAME)
 - 🔄 **Senha do banco de dados** (DB_PASSWORD)
+- 🔄 **Moeda padrão** (APP_CURRENCY)
 - 🔄 **Instância do banco de dados** (totalmente isolada)
+
+> **� MELHORIA:** Agora todos os parâmetros são configuráveis via variáveis de ambiente!
 
 ### Fluxo de Trabalho para Múltiplos Clientes
 
@@ -122,8 +147,34 @@ echo "Instalação finalizada! O CRM está pronto."
 - 🔒 **Seguro:** Cada cliente tem banco de dados isolado
 - 📊 **Escalável:** Dezenas de clientes no mesmo servidor
 - 🛠️ **Maintível:** Atualizações via repositório único
+- 🎯 **Flexível:** Configuração totalmente personalizável via variáveis de ambiente
+
+### ✨ Melhorias Implementadas
+
+**Antes:** Valores fixos no docker-compose.yml limitavam a personalização
+**Agora:** Todas as configurações são dinâmicas via variáveis de ambiente
+
+- 🔧 **MySQL completamente configurável:** Banco, usuário e senha únicos por cliente
+- 🔄 **phpMyAdmin automático:** Se conecta automaticamente com as credenciais do cliente
+- 🚀 **Deploy mais robusto:** Healthcheck usa as variáveis corretas
+- 📋 **Isolamento total:** Cada cliente tem configurações 100% independentes
 
 ## Solução de Problemas
+
+### Erro de Conexão com Banco de Dados
+
+**Problema:** `SQLSTATE[HY000] [1045] Access denied for user 'krayin_user'@'10.0.9.7' (using password: YES)`
+
+**Causa:** Configuração incorreta das variáveis de ambiente do banco de dados.
+
+**Solução:**
+
+1. Verifique se `DB_USERNAME`, `DB_PASSWORD` e `DB_DATABASE` estão configurados corretamente
+2. Certifique-se de que os valores são consistentes entre si
+3. O docker-compose.yml agora usa essas variáveis para criar automaticamente:
+   - O banco de dados especificado em `DB_DATABASE`
+   - O usuário especificado em `DB_USERNAME` com a senha `DB_PASSWORD`
+4. Reinicie o deploy após fazer as correções
 
 ### Se o Deploy Falhar
 

@@ -52,19 +52,21 @@ Vá para a aba **"Environment Variables"** e adicione as seguintes variáveis:
 | `DB_USERNAME`           | `krayin_user`                                         |
 | `DB_PASSWORD`           | `86ZNqzknm2te`                                        |
 | `SESSION_SECURE_COOKIE` | `true`                                                |
+| `REDE_INTERNA`          | `deltaai`                                             |
 
 ### 📋 Como Adaptar para Outros Clientes
 
 Para cada novo cliente, personalize as seguintes variáveis:
 
-| Variável      | Exemplo Cliente "ABC"               | Exemplo Cliente "XYZ"               |
-| ------------- | ----------------------------------- | ----------------------------------- |
-| `USER`        | `user_crm_abc`                      | `user_crm_xyz`                      |
-| `APP_NAME`    | `ABC EMPRESA`                       | `XYZ CONSULTORIA`                   |
-| `APP_URL`     | `https://crm.abc.deltaai.solutions` | `https://crm.xyz.deltaai.solutions` |
-| `DB_DATABASE` | `crm_abc`                           | `crm_xyz`                           |
-| `DB_USERNAME` | `abc_user`                          | `xyz_user`                          |
-| `DB_PASSWORD` | `senha_unica_abc123`                | `senha_unica_xyz456`                |
+| Variável       | Exemplo Cliente "ABC"               | Exemplo Cliente "XYZ"               |
+| -------------- | ----------------------------------- | ----------------------------------- |
+| `USER`         | `user_crm_abc`                      | `user_crm_xyz`                      |
+| `APP_NAME`     | `ABC EMPRESA`                       | `XYZ CONSULTORIA`                   |
+| `APP_URL`      | `https://crm.abc.deltaai.solutions` | `https://crm.xyz.deltaai.solutions` |
+| `DB_DATABASE`  | `crm_abc`                           | `crm_xyz`                           |
+| `DB_USERNAME`  | `abc_user`                          | `xyz_user`                          |
+| `DB_PASSWORD`  | `senha_unica_abc123`                | `senha_unica_xyz456`                |
+| `REDE_INTERNA` | `deltaai`                           | `deltaai`                           |
 
 > **⚠️ IMPORTANTE:**
 >
@@ -72,6 +74,7 @@ Para cada novo cliente, personalize as seguintes variáveis:
 > - A `APP_KEY` pode ser reutilizada ou você pode gerar uma nova
 > - Altere `USER`, `APP_NAME`, `APP_URL`, `DB_DATABASE`, `DB_USERNAME` e `DB_PASSWORD` para os valores específicos do cliente
 > - `APP_CURRENCY` define a moeda padrão (BRL para Real brasileiro)
+> - `REDE_INTERNA` deve ser a mesma para todos os clientes que compartilham o mesmo ambiente (ex: `deltaai`)
 > - **ATUALIZAÇÃO:** O docker-compose.yml agora usa variáveis de ambiente, permitindo total personalização por cliente
 
 7. Clique em **"Save"**
@@ -113,6 +116,75 @@ echo "Instalação finalizada! O CRM está pronto."
 - **Senha:** `admin123`
 
 > **🔒 SEGURANÇA:** Altere a senha do administrador imediatamente após o primeiro login!
+
+## Parte 4: Integração com n8n (Opcional)
+
+Se você possui uma instância do n8n e deseja integrá-la com o Krayin CRM para automações, siga estas configurações:
+
+### Configuração do n8n para Comunicação com Krayin
+
+Para que o n8n possa se comunicar com o Krayin CRM, ambos precisam estar na mesma rede Docker.
+
+#### Passo 4.1: Configurar Variáveis de Ambiente do n8n
+
+No arquivo de configuração do seu n8n, adicione a variável `REDE_INTERNA`:
+
+```env
+# Suas outras configurações do n8n...
+DB_POSTGRESDB_PASSWORD=$SERVICE_PASSWORD_POSTGRES
+DB_POSTGRESDB_USER=$SERVICE_USER_POSTGRES
+GENERIC_TIMEZONE=America/Sao_Paulo
+# ... outras variáveis ...
+
+# ⭐ NOVA VARIÁVEL PARA INTEGRAÇÃO COM KRAYIN
+REDE_INTERNA=deltaai
+```
+
+#### Passo 4.2: Atualizar docker-compose.yml do n8n
+
+Adicione a configuração de rede ao seu docker-compose.yml do n8n:
+
+```yaml
+services:
+  n8n:
+    # ... suas configurações existentes ...
+    networks:
+      - krayin-network
+
+  postgresql:
+    # ... suas configurações existentes ...
+    networks:
+      - krayin-network
+
+# Adicione esta seção no final do arquivo
+networks:
+  krayin-network:
+    external: true
+    name: krayin-network-${REDE_INTERNA}
+```
+
+#### Passo 4.3: Comunicação entre Serviços
+
+Com essa configuração, o n8n poderá acessar os serviços do Krayin usando os nomes dos containers:
+
+- **Krayin CRM:** `krayin-php-apache`
+- **Banco MySQL:** `krayin-mysql`
+- **Redis:** `krayin-redis`
+- **phpMyAdmin:** `krayin-phpmyadmin`
+- **MailHog:** `krayin-mailhog`
+
+**Exemplo de webhook no n8n:**
+
+```
+http://krayin-php-apache/api/webhook
+```
+
+#### Benefícios da Integração
+
+- 🔗 **Automações:** Criar workflows que respondem a eventos do CRM
+- 📊 **Sincronização:** Integrar com outras ferramentas via n8n
+- 🚀 **Escalabilidade:** Processar grandes volumes de dados
+- 🔔 **Notificações:** Enviar alertas baseados em ações do CRM
 
 ## Copiando o Projeto para Múltiplos Clientes
 
@@ -158,6 +230,8 @@ echo "Instalação finalizada! O CRM está pronto."
 - 🔄 **phpMyAdmin automático:** Se conecta automaticamente com as credenciais do cliente
 - 🚀 **Deploy mais robusto:** Healthcheck usa as variáveis corretas
 - 📋 **Isolamento total:** Cada cliente tem configurações 100% independentes
+- 🔗 **Integração com n8n:** Rede compartilhada para automações e workflows
+- 🌐 **Comunicação entre serviços:** n8n pode acessar diretamente os containers do Krayin
 
 ## Solução de Problemas
 

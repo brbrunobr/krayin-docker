@@ -19,7 +19,8 @@ services:
         # A condição que faz o serviço esperar
         condition: service_healthy
     networks:
-      - krayin-network
+      - krayin-network # Rede interna para falar com o DB/Redis
+      - proxy-public-network # ### ALTERAÇÃO ### Rede pública para o proxy
 
   krayin-mysql:
     image: mysql:8.0
@@ -50,7 +51,7 @@ services:
       timeout: 5s # Tempo máximo para a verificação responder
       retries: 10 # Número de tentativas antes de marcar como 'unhealthy'
     networks:
-      - krayin-network
+      - krayin-network # Correto: Apenas na rede interna, totalmente isolado.
 
   krayin-redis:
     image: redis:6.2-alpine
@@ -58,7 +59,7 @@ services:
     volumes:
       - ./.configs/redis-data:/data
     networks:
-      - krayin-network
+      - krayin-network # Correto: Apenas na rede interna, totalmente isolado.
 
   krayin-phpmyadmin:
     image: phpmyadmin:latest
@@ -72,14 +73,16 @@ services:
       krayin-mysql:
         condition: service_healthy
     networks:
-      - krayin-network
+      - krayin-network # Rede interna para falar com o DB
+      - proxy-public-network # ### ALTERAÇÃO ### Rede pública para o proxy
 
   krayin-mailhog:
     image: mailhog/mailhog
     logging:
       driver: "none"
     networks:
-      - krayin-network
+      - krayin-network # Rede interna para o app enviar e-mails
+      - proxy-public-network # ### ALTERAÇÃO ### Rede pública para você acessar a UI
 
 # Adicione esta seção no final para definir o volume nomeado
 volumes:
@@ -88,5 +91,9 @@ volumes:
 # Seção para definir as redes
 networks:
   krayin-network:
-    driver: bridge
+    # ### ALTERAÇÃO ### Mudamos para external: true para consistência
+    external: true
     name: krayin-network-${REDE_INTERNA}
+
+  proxy-public-network: # ### ALTERAÇÃO ### Declaramos a rede do proxy
+    external: true

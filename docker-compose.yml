@@ -32,7 +32,8 @@ services:
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - ./.configs/mysql-data:/var/lib/mysql/
+      # O Docker criará um volume chamado 'krayin-deltaai_krayin-mysql-data'.
+      - krayin-mysql-data:/var/lib/mysql
     # Adicione esta seção 'healthcheck'
     healthcheck:
       # O comando que o Docker executará para verificar a saúde do MySQL
@@ -57,7 +58,8 @@ services:
     image: redis:6.2-alpine
     command: redis-server --save 20 1 --loglevel warning
     volumes:
-      - ./.configs/redis-data:/data
+      # O Docker criará um volume chamado 'krayin-deltaai_krayin-redis-data'.
+      - krayin-redis-data:/data
     networks:
       - krayin-network # Correto: Apenas na rede interna, totalmente isolado.
 
@@ -85,8 +87,8 @@ services:
       - proxy-public-network # ### ALTERAÇÃO ### Rede pública para você acessar a UI
 
 # Adicione esta seção no final para definir o volume nomeado
-volumes:
-  krayin-storage:
+#volumes:
+#  krayin-storage:
 
 # Seção para definir as redes
 networks:

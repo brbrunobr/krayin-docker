@@ -53,7 +53,8 @@ RUN docker-php-ext-install calendar
 
 # Instalar dependências do Composer
 # A flag --no-dev é boa prática para produção
-RUN composer install --no-interaction --optimize-autoloader --no-dev
+# A flag --no-scripts evita erros de conexão com MySQL durante o build
+RUN composer install --no-interaction --optimize-autoloader --no-dev --no-scripts
 
 # Copiar o arquivo .env de exemplo
 RUN cp .env.example .env

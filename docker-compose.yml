@@ -18,6 +18,16 @@ services:
       krayin-mysql:
         # A condição que faz o serviço esperar
         condition: service_healthy
+    environment:
+      # ✉️ Configurações de E-mail (SMTP)
+      MAIL_MAILER: ${MAIL_MAILER}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_ENCRYPTION: ${MAIL_ENCRYPTION}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME}
     networks:
       - krayin-network # Rede interna para falar com o DB/Redis
       - proxy-public-network # ### ALTERAÇÃO ### Rede pública para o proxy

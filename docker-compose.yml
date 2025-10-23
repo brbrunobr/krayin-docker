@@ -1,5 +1,6 @@
-# Docker Compose Corrigido v2 - Krayin CRM
-# Solução para o problema de Gateway Timeout por alternância de clientes (Keep-Alive)
+# Docker Compose GENÉRICO - Krayin CRM
+# Para uso com deploy automático via GitHub + Coolify
+# Funciona para TODOS os clientes (diferenciados por variáveis de ambiente)
 
 version: "3.9"
 
@@ -13,8 +14,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     
-    # ✅ CORREÇÃO 1: Nomeação explícita e versionada da imagem
-    # Use CLIENT_ID para diferenciar cada cliente
+    # Nomeação da imagem usando variável de ambiente
     image: krayin-crm-${REDE_INTERNA}:${VERSION:-latest}
     
     volumes:
@@ -25,7 +25,6 @@ services:
         condition: service_healthy
     
     environment:
-      # ✉️ Configurações de E-mail (SMTP)
       MAIL_MAILER: ${MAIL_MAILER}
       MAIL_HOST: ${MAIL_HOST}
       MAIL_PORT: ${MAIL_PORT}
@@ -39,51 +38,23 @@ services:
       - krayin-network
       - proxy-public-network
     
-    # ✅ CORREÇÃO 2: Health Check para o serviço PHP/Apache
+    # Health check - útil e não causa conflito
     healthcheck:
-      # Verifica se o Apache está respondendo
       test: ['CMD', 'curl', '-f', 'http://localhost']
-      interval: 30s      # Verifica a cada 30 segundos
-      timeout: 10s       # Espera no máximo 10 segundos
-      retries: 5         # Tenta 5 vezes antes de marcar como 'unhealthy'
-      start_period: 60s  # Período de graça para inicialização
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
     
-    # ✅ CORREÇÃO 3: Labels do Traefik com configuração anti-Keep-Alive
-    labels:
-      # --- Configurações Padrão do Traefik (gerenciadas pelo Coolify ou manuais) ---
-      - "traefik.enable=true"
-      - "traefik.http.routers.krayin-${REDE_INTERNA}.rule=Host(`${CLIENT_FQDN}`)"
-      - "traefik.http.routers.krayin-${REDE_INTERNA}.entrypoints=websecure"
-      - "traefik.http.routers.krayin-${REDE_INTERNA}.tls.certresolver=letsencrypt"
-      - "traefik.http.services.krayin-${REDE_INTERNA}.loadbalancer.server.port=80"
-
-      # --- ✅ CORREÇÃO PARA O PROBLEMA DE KEEP-ALIVE ---
-
-      # 1. Define um perfil de transporte customizado chamado 'krayin-transport'
-      #    Este perfil instrui o Traefik a ser mais conservador com o reuso de conexões.
-      
-      # Limita o número de conexões inativas (idle) que o Traefik mantém para cada backend.
-      # Força a criação de novas conexões com mais frequência, evitando o reuso de conexões "mortas".
-      - "traefik.http.serversTransports.krayin-transport.maxIdleConnsPerHost=1"
-      
-      # Define um timeout curto para conexões inativas. Garante que o Traefik feche a conexão
-      # antes ou logo depois do Apache, evitando o estado de "half-closed".
-      - "traefik.http.serversTransports.krayin-transport.forwardingTimeouts.idleConnTimeout=10s"
-
-      # 2. Associa o serviço deste container ao perfil de transporte criado acima.
-      #    O sufixo '@docker' informa ao Traefik que a definição está no provedor Docker (via labels).
-      - "traefik.http.services.krayin-${REDE_INTERNA}.loadbalancer.serversTransport=krayin-transport@docker"
-    
-    # ✅ CORREÇÃO 4 (Opcional): Limites de recursos para evitar sobrecarga
-    # Descomente e ajuste conforme os recursos disponíveis no seu VPS
-    # deploy:
-    #   resources:
-    #     limits:
-    #       cpus: '1.0'    # Limita a 1 core de CPU
-    #       memory: 1G     # Limita a 1GB de RAM
-    #     reservations:
-    #       cpus: '0.25'
-    #       memory: 512M
+    # ❌ NÃO adicione labels customizadas aqui!
+    # O Coolify gerencia automaticamente baseado em SERVICE_FQDN_KRAYIN_PHP_APACHE
+    # 
+    # Se precisar de configurações especiais do Traefik, adicione via interface do Coolify
+    # em "Environment Variables" como labels:
+    # 
+    # Exemplo para adicionar via Coolify (se necessário):
+    # traefik.http.serversTransports.krayin-transport.maxIdleConnsPerHost=1
+    # traefik.http.serversTransports.krayin-transport.forwardingTimeouts.idleConnTimeout=10s
 
   krayin-mysql:
     image: mysql:8.0

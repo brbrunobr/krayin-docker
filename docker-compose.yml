@@ -1,4 +1,3 @@
-
 # Docker Compose Corrigido v2 - Krayin CRM
 # Solução para o problema de Gateway Timeout por alternância de clientes (Keep-Alive)
 
@@ -14,6 +13,8 @@ services:
       context: .
       dockerfile: ./Dockerfile
     
+    # ✅ CORREÇÃO 1: Nomeação explícita e versionada da imagem
+    # Use CLIENT_ID para diferenciar cada cliente
     image: krayin-crm-${CLIENT_ID}:${VERSION:-latest}
     
     volumes:
@@ -24,19 +25,30 @@ services:
         condition: service_healthy
     
     environment:
-      # ... (suas variáveis de ambiente)
+      # ✉️ Configurações de E-mail (SMTP)
+      MAIL_MAILER: ${MAIL_MAILER}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_ENCRYPTION: ${MAIL_ENCRYPTION}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME}
     
     networks:
       - krayin-network
       - proxy-public-network
     
+    # ✅ CORREÇÃO 2: Health Check para o serviço PHP/Apache
     healthcheck:
+      # Verifica se o Apache está respondendo
       test: ['CMD', 'curl', '-f', 'http://localhost']
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
+      interval: 30s      # Verifica a cada 30 segundos
+      timeout: 10s       # Espera no máximo 10 segundos
+      retries: 5         # Tenta 5 vezes antes de marcar como 'unhealthy'
+      start_period: 60s  # Período de graça para inicialização
     
+    # ✅ CORREÇÃO 3: Labels do Traefik com configuração anti-Keep-Alive
     labels:
       # --- Configurações Padrão do Traefik (gerenciadas pelo Coolify ou manuais) ---
       - "traefik.enable=true"
@@ -61,18 +73,76 @@ services:
       # 2. Associa o serviço deste container ao perfil de transporte criado acima.
       #    O sufixo '@docker' informa ao Traefik que a definição está no provedor Docker (via labels).
       - "traefik.http.services.krayin-${CLIENT_ID}.loadbalancer.serversTransport=krayin-transport@docker"
+    
+    # ✅ CORREÇÃO 4 (Opcional): Limites de recursos para evitar sobrecarga
+    # Descomente e ajuste conforme os recursos disponíveis no seu VPS
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '1.0'    # Limita a 1 core de CPU
+    #       memory: 1G     # Limita a 1GB de RAM
+    #     reservations:
+    #       cpus: '0.25'
+    #       memory: 512M
 
-  # ... (demais serviços: krayin-mysql, krayin-redis, etc. permanecem inalterados)
-  
   krayin-mysql:
     image: mysql:8.0
-    # ... (configuração inalterada)
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_HOST: "%"
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./.configs/mysql-data:/var/lib/mysql/
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "${DB_USERNAME}",
+          "-p${DB_PASSWORD}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - krayin-network
 
   krayin-redis:
     image: redis:6.2-alpine
-    # ... (configuração inalterada)
+    command: redis-server --save 20 1 --loglevel warning
+    volumes:
+      - ./.configs/redis-data:/data
+    networks:
+      - krayin-network
 
-  # ... (etc.)
+  krayin-phpmyadmin:
+    image: phpmyadmin:latest
+    environment:
+      PMA_HOST: krayin-mysql
+      PMA_USER: ${DB_USERNAME}
+      PMA_PASSWORD: ${DB_PASSWORD}
+      UPLOAD_LIMIT: 512M
+    depends_on:
+      krayin-mysql:
+        condition: service_healthy
+    networks:
+      - krayin-network
+      - proxy-public-network
+
+  krayin-mailhog:
+    image: mailhog/mailhog
+    logging:
+      driver: "none"
+    networks:
+      - krayin-network
+      - proxy-public-network
 
 volumes:
   krayin-storage:

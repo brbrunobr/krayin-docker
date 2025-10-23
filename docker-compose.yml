@@ -20,6 +20,33 @@ services:
         # A condição que faz o serviço esperar
         condition: service_healthy
     environment:
+      # 🧩 Configurações principais da aplicação
+      APP_NAME: ${APP_NAME}
+      APP_URL: ${APP_URL}
+      APP_KEY: ${APP_KEY}
+      APP_CURRENCY: ${APP_CURRENCY}
+      ASSET_URL: ${ASSET_URL}
+      APP_ENV: production
+      APP_DEBUG: false
+
+      # 📦 Banco de Dados
+      DB_CONNECTION: ${DB_CONNECTION}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      # 🧠 Redis (Cache e Sessão)
+      CACHE_DRIVER: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: sync
+      REDIS_HOST: krayin-redis
+
+      # 🌐 Sessão / Segurança
+      SANCTUM_STATEFUL_DOMAINS: ${SANCTUM_STATEFUL_DOMAINS}
+      SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE}
+
       # ✉️ Configurações de E-mail (SMTP)
       MAIL_MAILER: ${MAIL_MAILER}
       MAIL_HOST: ${MAIL_HOST}
@@ -29,6 +56,8 @@ services:
       MAIL_ENCRYPTION: ${MAIL_ENCRYPTION}
       MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS}
       MAIL_FROM_NAME: ${MAIL_FROM_NAME}
+      MAIL_REPLY_TO_ADDRESS: ${MAIL_REPLY_TO_ADDRESS:-${MAIL_FROM_ADDRESS}}
+      MAIL_REPLY_TO_NAME: ${MAIL_REPLY_TO_NAME:-${MAIL_FROM_NAME}}
     networks:
       - krayin-network # Rede interna para falar com o DB/Redis
       - proxy-public-network # ### ALTERAÇÃO ### Rede pública para o proxy

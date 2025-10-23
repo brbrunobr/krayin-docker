@@ -56,6 +56,9 @@ RUN docker-php-ext-install calendar
 # A flag --no-scripts evita erros de conexão com MySQL durante o build
 RUN composer install --no-interaction --optimize-autoloader --no-dev --no-scripts
 
+# Instalar o pacote webklex/laravel-imap para integração IMAP
+RUN composer require webklex/laravel-imap --no-plugins --no-scripts
+
 # Copiar o arquivo .env de exemplo
 RUN cp .env.example .env
 

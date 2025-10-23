@@ -1,4 +1,6 @@
-# Atualize a versão para suportar a condição 'service_healthy'
+# Docker Compose Corrigido - Krayin CRM
+# Este arquivo implementa todas as correções recomendadas para resolver o problema de Gateway Timeout
+
 version: "3.9"
 
 services:
@@ -10,14 +12,18 @@ services:
         user: ${USER}
       context: .
       dockerfile: ./Dockerfile
-    image: krayin-php-apache
+    
+    # ✅ CORREÇÃO 1: Nomeação explícita e versionada da imagem
+    # Use uma variável como ${REDE_INTERNA} para diferenciar cada cliente
+    image: krayin-crm-${REDE_INTERNA}:${VERSION:-latest}
+    
     volumes:
       - krayin-storage:/var/www/html/storage
-    # Adicione esta seção 'depends_on'
+    
     depends_on:
       krayin-mysql:
-        # A condição que faz o serviço esperar
         condition: service_healthy
+    
     environment:
       # ✉️ Configurações de E-mail (SMTP)
       MAIL_MAILER: ${MAIL_MAILER}
@@ -28,9 +34,49 @@ services:
       MAIL_ENCRYPTION: ${MAIL_ENCRYPTION}
       MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS}
       MAIL_FROM_NAME: ${MAIL_FROM_NAME}
+    
     networks:
-      - krayin-network # Rede interna para falar com o DB/Redis
-      - proxy-public-network # ### ALTERAÇÃO ### Rede pública para o proxy
+      - krayin-network
+      - proxy-public-network
+    
+    # ✅ CORREÇÃO 2: Health Check para o serviço PHP/Apache
+    healthcheck:
+      # Verifica se o Apache está respondendo
+      test: ['CMD', 'curl', '-f', 'http://localhost']
+      interval: 30s      # Verifica a cada 30 segundos
+      timeout: 10s       # Espera no máximo 10 segundos
+      retries: 5         # Tenta 5 vezes antes de marcar como 'unhealthy'
+      start_period: 60s  # Período de graça para inicialização
+    
+    # ✅ CORREÇÃO 3: Labels do Traefik com timeouts ajustados
+    labels:
+      # Habilita o Traefik para este serviço
+      - "traefik.enable=true"
+      
+      # Define o roteador HTTP (ajuste o nome do host conforme necessário)
+      - "traefik.http.routers.krayin-${REDE_INTERNA}.rule=Host(`${CLIENT_FQDN}`)"
+      - "traefik.http.routers.krayin-${REDE_INTERNA}.entrypoints=websecure"
+      - "traefik.http.routers.krayin-${REDE_INTERNA}.tls.certresolver=letsencrypt"
+      
+      # Define o serviço e a porta
+      - "traefik.http.services.krayin-${REDE_INTERNA}.loadbalancer.server.port=80"
+      
+      # --- AJUSTE DE TIMEOUTS ---
+      # Aumenta o timeout de resposta para 300 segundos (5 minutos)
+      - "traefik.http.services.krayin-${REDE_INTERNA}.loadbalancer.server.forwardingTimeouts.responseHeaderTimeout=300s"
+      # Aumenta o timeout de inatividade da conexão
+      - "traefik.http.services.krayin-${REDE_INTERNA}.loadbalancer.server.forwardingTimeouts.idleTimeout=300s"
+    
+    # ✅ CORREÇÃO 4 (Opcional): Limites de recursos para evitar sobrecarga
+    # Descomente e ajuste conforme os recursos disponíveis no seu VPS
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '1.0'    # Limita a 1 core de CPU
+    #       memory: 1G     # Limita a 1GB de RAM
+    #     reservations:
+    #       cpus: '0.25'
+    #       memory: 512M
 
   krayin-mysql:
     image: mysql:8.0
@@ -43,9 +89,7 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - ./.configs/mysql-data:/var/lib/mysql/
-    # Adicione esta seção 'healthcheck'
     healthcheck:
-      # O comando que o Docker executará para verificar a saúde do MySQL
       test:
         [
           "CMD",
@@ -57,11 +101,11 @@ services:
           "${DB_USERNAME}",
           "-p${DB_PASSWORD}",
         ]
-      interval: 10s # Intervalo entre as verificações
-      timeout: 5s # Tempo máximo para a verificação responder
-      retries: 10 # Número de tentativas antes de marcar como 'unhealthy'
+      interval: 10s
+      timeout: 5s
+      retries: 10
     networks:
-      - krayin-network # Correto: Apenas na rede interna, totalmente isolado.
+      - krayin-network
 
   krayin-redis:
     image: redis:6.2-alpine
@@ -69,7 +113,7 @@ services:
     volumes:
       - ./.configs/redis-data:/data
     networks:
-      - krayin-network # Correto: Apenas na rede interna, totalmente isolado.
+      - krayin-network
 
   krayin-phpmyadmin:
     image: phpmyadmin:latest
@@ -78,32 +122,29 @@ services:
       PMA_USER: ${DB_USERNAME}
       PMA_PASSWORD: ${DB_PASSWORD}
       UPLOAD_LIMIT: 512M
-    # Também é uma boa prática fazer o phpMyAdmin esperar pelo banco de dados
     depends_on:
       krayin-mysql:
         condition: service_healthy
     networks:
-      - krayin-network # Rede interna para falar com o DB
-      - proxy-public-network # ### ALTERAÇÃO ### Rede pública para o proxy
+      - krayin-network
+      - proxy-public-network
 
   krayin-mailhog:
     image: mailhog/mailhog
     logging:
       driver: "none"
     networks:
-      - krayin-network # Rede interna para o app enviar e-mails
-      - proxy-public-network # ### ALTERAÇÃO ### Rede pública para você acessar a UI
+      - krayin-network
+      - proxy-public-network
 
-# Adicione esta seção no final para definir o volume nomeado
 volumes:
   krayin-storage:
 
-# Seção para definir as redes
 networks:
   krayin-network:
-    # ### ALTERAÇÃO ### Mudamos para external: true para consistência
     external: true
     name: krayin-network-${REDE_INTERNA}
-
-  proxy-public-network: # ### ALTERAÇÃO ### Declaramos a rede do proxy
+  
+  proxy-public-network:
     external: true
+

@@ -160,7 +160,7 @@ services:
 networks:
   krayin-network:
     external: true
-    name: krayin-network-${REDE_INTERNA}
+    name: krayin-network-${CLIENTE}
 ```
 
 #### Passo 4.3: Comunicação entre Serviços

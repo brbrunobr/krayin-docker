@@ -1,0 +1,17 @@
+# Arquivos de ambiente (contêm senhas e credenciais)
+.env
+.env.*
+!.env.exemplo
+
+# Dados dos containers
+.configs/mysql-data*/
+.configs/redis-data*/
+.configs/elasticsearch-data*/
+
+# Logs
+*.log
+
+# OS específicos
+.DS_Store
+Thumbs.db
+desktop.ini

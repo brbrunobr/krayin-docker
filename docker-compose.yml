@@ -3,6 +3,7 @@ version: "3.9"
 
 services:
   krayin-php-apache:
+    container_name: krayin-php-apache-${CLIENTE}
     build:
       args:
         container_project_path: /var/www/html/
@@ -10,9 +11,9 @@ services:
         user: ${USER}
       context: .
       dockerfile: ./Dockerfile
-    image: krayin-php-apache
+    image: krayin-php-apache-${CLIENTE}
     volumes:
-      - krayin-storage:/var/www/html/storage
+      - krayin-storage-${CLIENTE}:/var/www/html/storage
     # Adicione esta seção 'depends_on'
     depends_on:
       krayin-mysql:
@@ -33,6 +34,7 @@ services:
       - proxy-public-network # ### ALTERAÇÃO ### Rede pública para o proxy
 
   krayin-mysql:
+    container_name: krayin-mysql-${CLIENTE}
     image: mysql:8.0
     command: --default-authentication-plugin=mysql_native_password
     environment:
@@ -64,6 +66,7 @@ services:
       - krayin-network # Correto: Apenas na rede interna, totalmente isolado.
 
   krayin-redis:
+    container_name: krayin-redis-${CLIENTE}
     image: redis:6.2-alpine
     command: redis-server --save 20 1 --loglevel warning
     volumes:
@@ -72,6 +75,7 @@ services:
       - krayin-network # Correto: Apenas na rede interna, totalmente isolado.
 
   krayin-phpmyadmin:
+    container_name: krayin-phpmyadmin-${CLIENTE}
     image: phpmyadmin:latest
     environment:
       PMA_HOST: krayin-mysql
@@ -87,6 +91,7 @@ services:
       - proxy-public-network # ### ALTERAÇÃO ### Rede pública para o proxy
 
   krayin-mailhog:
+    container_name: krayin-mailhog-${CLIENTE}
     image: mailhog/mailhog
     logging:
       driver: "none"
@@ -96,14 +101,15 @@ services:
 
 # Adicione esta seção no final para definir o volume nomeado
 volumes:
-  krayin-storage:
+  krayin-storage-${CLIENTE}:
+    name: krayin-storage-${CLIENTE}
 
 # Seção para definir as redes
 networks:
   krayin-network:
     # ### ALTERAÇÃO ### Mudamos para external: true para consistência
     external: true
-    name: krayin-network-${REDE_INTERNA}
+    name: krayin-network-${CLIENTE}
 
   proxy-public-network: # ### ALTERAÇÃO ### Declaramos a rede do proxy
     external: true

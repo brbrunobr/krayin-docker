@@ -15,7 +15,7 @@ services:
     
     # ✅ CORREÇÃO 1: Nomeação explícita e versionada da imagem
     # Use CLIENT_ID para diferenciar cada cliente
-    image: krayin-crm-${CLIENT_ID}:${VERSION:-latest}
+    image: krayin-crm-${REDE_INTERNA}:${VERSION:-latest}
     
     volumes:
       - krayin-storage:/var/www/html/storage
@@ -52,10 +52,10 @@ services:
     labels:
       # --- Configurações Padrão do Traefik (gerenciadas pelo Coolify ou manuais) ---
       - "traefik.enable=true"
-      - "traefik.http.routers.krayin-${CLIENT_ID}.rule=Host(`${CLIENT_FQDN}`)"
-      - "traefik.http.routers.krayin-${CLIENT_ID}.entrypoints=websecure"
-      - "traefik.http.routers.krayin-${CLIENT_ID}.tls.certresolver=letsencrypt"
-      - "traefik.http.services.krayin-${CLIENT_ID}.loadbalancer.server.port=80"
+      - "traefik.http.routers.krayin-${REDE_INTERNA}.rule=Host(`${CLIENT_FQDN}`)"
+      - "traefik.http.routers.krayin-${REDE_INTERNA}.entrypoints=websecure"
+      - "traefik.http.routers.krayin-${REDE_INTERNA}.tls.certresolver=letsencrypt"
+      - "traefik.http.services.krayin-${REDE_INTERNA}.loadbalancer.server.port=80"
 
       # --- ✅ CORREÇÃO PARA O PROBLEMA DE KEEP-ALIVE ---
 
@@ -72,7 +72,7 @@ services:
 
       # 2. Associa o serviço deste container ao perfil de transporte criado acima.
       #    O sufixo '@docker' informa ao Traefik que a definição está no provedor Docker (via labels).
-      - "traefik.http.services.krayin-${CLIENT_ID}.loadbalancer.serversTransport=krayin-transport@docker"
+      - "traefik.http.services.krayin-${REDE_INTERNA}.loadbalancer.serversTransport=krayin-transport@docker"
     
     # ✅ CORREÇÃO 4 (Opcional): Limites de recursos para evitar sobrecarga
     # Descomente e ajuste conforme os recursos disponíveis no seu VPS
